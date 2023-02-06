@@ -6,19 +6,20 @@ public class Buffer
 {
 
   public static Buffer Allocate(int length) {
-    return new(new BufferSource[] { new(new byte[length], 0, length) });
+    return new(new BufferSource[] { new(new byte[length], 0, length, false) });
   }
 
-  public static Buffer FromByteArray(byte[] source, int start, int end)
+  public static Buffer FromByteArray(byte[] source, int start, int end, bool copyOnWrite = true)
   {
-    return new(new BufferSource[] { new(source, start, end) });
+    return new(new BufferSource[] { new(source, start, end, copyOnWrite) });
   }
 
-  public static Buffer FromByteArray(byte[] source) { return FromByteArray(source, 0, source.Length); }
+  public static Buffer FromByteArray(byte[] source, bool copyOnWrite = true) { return FromByteArray(source, 0, source.Length, copyOnWrite); }
 
   public static Buffer FromString(string source, int start, int end)
   {
-    return FromByteArray(Encoding.Default.GetBytes(source.Substring(start, end - start)));
+    byte[] byteSource = Encoding.Default.GetBytes(source.Substring(start, end - start));
+    return FromByteArray(byteSource, 0, byteSource.Length, false);
   }
 
   public static Buffer FromString(string source) { return FromString(source, 0, source.Length); }
@@ -29,7 +30,10 @@ public class Buffer
 
     foreach (Buffer buffer in buffers)
     {
-      sources.AddRange(buffer.Sources);
+      foreach (BufferSource bufferSource in buffer.Sources)
+      {
+        sources.Add(bufferSource.Clone());
+      }
     }
 
     return new Buffer(sources.ToArray());
@@ -111,7 +115,7 @@ public class Buffer
 
   public void Defragment()
   {
-    Sources = new BufferSource[] { new(ToByteArray(), 0, Length) };
+    Sources = new BufferSource[] { new(ToByteArray()) };
   }
 
   private void ResolveCoords(int index, out int x, out int y)
@@ -217,6 +221,7 @@ public class Buffer
         }
         else
         {
+          source = source.Clone();
           length -= source.Length;
         }
 

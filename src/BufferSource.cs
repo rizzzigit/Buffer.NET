@@ -4,7 +4,7 @@ namespace RizzziGit;
 
 internal class BufferSource
 {
-  public BufferSource(byte[] data, int start, int end)
+  public BufferSource(byte[] data, int start, int end, bool copyOnWrite)
   {
     if (
       (start < 0) ||
@@ -17,11 +17,16 @@ internal class BufferSource
     Data = data;
     Start = start;
     End = end;
+    CopyOnWrite = copyOnWrite;
   }
+
+  public BufferSource(byte[] data, int start, int end) : this(data, start, end, false) { }
+  public BufferSource(byte[] data) : this(data, 0, data.Length) { }
 
   private byte[] Data;
   private int Start;
   private int End;
+  private bool CopyOnWrite;
   public int Length { get => End - Start; }
   public int RealLength { get => Data.Length; }
   public bool IsTrimmed { get => Length != Data.Length; }
@@ -64,11 +69,17 @@ internal class BufferSource
         throw new IndexOutOfRangeException();
       }
 
+      if (CopyOnWrite)
+      {
+        CopyOnWrite = false;
+        System.Buffer.BlockCopy(Data, 0, Data = new byte[Data.Length], 0, Data.Length);
+      }
+
       Data[Start + index] = value;
     }
   }
 
-  public BufferSource Slice(int start, int end)
+  public BufferSource Slice(int start, int end, bool copyOnWrite = true)
   {
     if (
       (start < 0) ||
@@ -78,7 +89,12 @@ internal class BufferSource
       throw new IndexOutOfRangeException();
     }
 
-    return new(Data, Start + start, Start + end);
+    return new(Data, Start + start, Start + end, copyOnWrite);
+  }
+
+  public BufferSource Clone(bool copyOnWrite = true)
+  {
+    return new(Data, Start, End, copyOnWrite);
   }
 
   public byte[] ToByteArray()

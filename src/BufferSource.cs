@@ -72,7 +72,9 @@ internal class BufferSource
       if (CopyOnWrite)
       {
         CopyOnWrite = false;
-        System.Buffer.BlockCopy(Data, 0, Data = new byte[Data.Length], 0, Data.Length);
+        System.Buffer.BlockCopy(Data, Start, Data = new byte[Data.Length], 0, End - Start);
+        Start = 0;
+        End = Data.Length;
       }
 
       Data[Start + index] = value;

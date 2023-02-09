@@ -258,7 +258,13 @@ public class Buffer
 
   public Buffer Clone()
   {
-    return Buffer.FromByteArray(ToByteArray());
+    BufferSource[] sources = new BufferSource[Sources.Length];
+    for (int index = 0; index < Sources.Length; index++)
+    {
+      sources[index] = Sources[index].Clone(true);
+    }
+
+    return new(sources);
   }
 
   public bool Equals(Buffer another)

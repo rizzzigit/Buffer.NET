@@ -4,6 +4,23 @@ namespace RizzziGit;
 
 public class Buffer
 {
+  public static bool operator == (Buffer? left, object? right)
+  {
+    return left?.GetHashCode() == right?.GetHashCode();
+  }
+
+  public static bool operator != (Buffer? left, object? right)
+  {
+    return !(left == right);
+  }
+
+  public static Buffer Random(int length)
+  {
+    byte[] data = new byte[length];
+    System.Random.Shared.NextBytes(data);
+
+    return new(new BufferSource[] { new(data, 0, length, false) });
+  }
 
   public static Buffer Allocate(int length) {
     return new(new BufferSource[] { new(new byte[length], 0, length, false) });
@@ -23,6 +40,17 @@ public class Buffer
   }
 
   public static Buffer FromString(string source) { return FromString(source, 0, source.Length); }
+
+  public static Buffer FromHex(string source)
+  {
+    byte[] bytes = new byte[source.Length / 2];
+    for (int index = 0; index < source.Length; index += 2)
+    {
+      bytes[index / 2] = Convert.ToByte(source.Substring(index, 2), 16);
+    }
+
+    return Buffer.FromByteArray(bytes);
+  }
 
   public static Buffer Concat(Buffer[] buffers)
   {
@@ -149,6 +177,11 @@ public class Buffer
     {
       ResolveCoords(index, out int x, out int y);
       Sources[y][x] = value;
+
+      if (HashCodeCache != null)
+      {
+        HashCodeCache = null;
+      }
     }
   }
 
@@ -169,6 +202,11 @@ public class Buffer
   public new string ToString()
   {
     return Encoding.Default.GetString(ToByteArray());
+  }
+
+  public string ToHex()
+  {
+    return BitConverter.ToString(ToByteArray()).Replace("-", "");
   }
 
   public Buffer Slice(int start, int end)
@@ -276,6 +314,30 @@ public class Buffer
         (ToByteArray().SequenceEqual(another.ToByteArray()))
       )
     );
+  }
+
+  public override bool Equals(object? obj)
+  {
+    Buffer? objCastd = obj as Buffer;
+    if (objCastd == null)
+    {
+      return false;
+    }
+
+    return this.Equals((Buffer)objCastd);
+  }
+
+  private int? HashCodeCache;
+  public override int GetHashCode()
+  {
+    if (HashCodeCache != null)
+    {
+      return (int)HashCodeCache;
+    }
+
+    HashCode code = new();
+    code.AddBytes(ToByteArray());
+    return (int)(HashCodeCache = code.ToHashCode());
   }
 
   public Buffer Repeat(int count)

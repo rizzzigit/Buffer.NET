@@ -7,7 +7,7 @@
     <RootNamespace>RizzziGit</RootNamespace>
 
     <SelfContained>false</SelfContained>
-    <DebugType>None</DebugType>
+    <DebugType>Portable</DebugType>
 
     <AssemblyTitle>RizzziGit.Buffer</AssemblyTitle>
     <Product>Buffer</Product>

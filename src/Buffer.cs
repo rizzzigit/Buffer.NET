@@ -274,6 +274,51 @@ public class Buffer
     return new(output.ToArray());
   }
 
+  public int Read(byte[] buffer, int position, int length)
+  {
+    Buffer output = Slice(position, position + length > Length ? Length : position + length);
+    System.Buffer.BlockCopy(output.ToByteArray(), 0, buffer, 0, output.Length);
+    return output.Length;
+  }
+
+  public int Write(byte[] buffer, int sourceOffset, int destinationOffset, int length)
+  {
+    int bytesWritten = 0;
+    foreach (BufferSource source in Sources)
+    {
+      if (destinationOffset >= source.Length)
+      {
+        destinationOffset -= source.Length;
+        continue;
+      }
+
+      if (source.Length < (destinationOffset + length))
+      {
+        source.Write(buffer, sourceOffset, destinationOffset, source.Length - destinationOffset);
+        int written = source.Length - destinationOffset;
+
+        length -= written;
+        sourceOffset += written;
+        bytesWritten += written;
+
+        destinationOffset = 0;
+      }
+      else
+      {
+        source.Write(buffer, sourceOffset, destinationOffset, length);
+
+        sourceOffset += length;
+        bytesWritten += length;
+        length = 0;
+
+        destinationOffset = 0;
+        break;
+      }
+    }
+
+    return bytesWritten;
+  }
+
   public Buffer PadEnd(int length)
   {
     if (Length < length)

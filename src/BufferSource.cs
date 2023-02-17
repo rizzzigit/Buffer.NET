@@ -69,16 +69,33 @@ internal class BufferSource
         throw new IndexOutOfRangeException();
       }
 
-      if (CopyOnWrite)
-      {
-        CopyOnWrite = false;
-        System.Buffer.BlockCopy(Data, Start, Data = new byte[Data.Length], 0, End - Start);
-        Start = 0;
-        End = Data.Length;
-      }
-
+      EnsureCOW();
       Data[Start + index] = value;
     }
+  }
+
+  private void EnsureCOW()
+  {
+    if (!CopyOnWrite)
+    {
+      return;
+    }
+
+    System.Buffer.BlockCopy(Data, Start, Data = new byte[End - Start], 0, End - Start);
+    Start = 0;
+    End = Data.Length;
+    CopyOnWrite = false;
+  }
+
+  public byte[] Read(int start, int end)
+  {
+    return Slice(start, end).ToByteArray();
+  }
+
+  public void Write(byte[] source, int sourceOffset, int destinationOffset, int count)
+  {
+    EnsureCOW();
+    System.Buffer.BlockCopy(source, sourceOffset, Data, destinationOffset, count);
   }
 
   public BufferSource Slice(int start, int end, bool copyOnWrite = true)

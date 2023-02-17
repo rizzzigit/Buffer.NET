@@ -283,40 +283,50 @@ public class Buffer
 
   public int Write(byte[] buffer, int sourceOffset, int destinationOffset, int length)
   {
-    int bytesWritten = 0;
-    foreach (BufferSource source in Sources)
+    try
     {
-      if (destinationOffset >= source.Length)
+      int bytesWritten = 0;
+      foreach (BufferSource source in Sources)
       {
-        destinationOffset -= source.Length;
-        continue;
+        if (destinationOffset >= source.Length)
+        {
+          destinationOffset -= source.Length;
+          continue;
+        }
+
+        if (source.Length < (destinationOffset + length))
+        {
+          source.Write(buffer, sourceOffset, destinationOffset, source.Length - destinationOffset);
+          int written = source.Length - destinationOffset;
+
+          length -= written;
+          sourceOffset += written;
+          bytesWritten += written;
+
+          destinationOffset = 0;
+        }
+        else
+        {
+          source.Write(buffer, sourceOffset, destinationOffset, length);
+
+          sourceOffset += length;
+          bytesWritten += length;
+          length = 0;
+
+          destinationOffset = 0;
+          break;
+        }
       }
 
-      if (source.Length < (destinationOffset + length))
+      return bytesWritten;
+    }
+    finally
+    {
+      if (HashCodeCache != null)
       {
-        source.Write(buffer, sourceOffset, destinationOffset, source.Length - destinationOffset);
-        int written = source.Length - destinationOffset;
-
-        length -= written;
-        sourceOffset += written;
-        bytesWritten += written;
-
-        destinationOffset = 0;
-      }
-      else
-      {
-        source.Write(buffer, sourceOffset, destinationOffset, length);
-
-        sourceOffset += length;
-        bytesWritten += length;
-        length = 0;
-
-        destinationOffset = 0;
-        break;
+        HashCodeCache = null;
       }
     }
-
-    return bytesWritten;
   }
 
   public Buffer PadEnd(int length)

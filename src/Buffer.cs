@@ -68,6 +68,36 @@ public class Buffer
     return Buffer.FromByteArray(bytes);
   }
 
+  public static Buffer FromInt32(int integer)
+  {
+    byte[] bytes = BitConverter.GetBytes(integer);
+    if (BitConverter.IsLittleEndian)
+    {
+      Array.Reverse(bytes);
+    }
+
+    Buffer output = FromByteArray(bytes);
+    int offset = 0;
+    for (; offset < output.Length && (output[offset] == 0); offset++) ;
+
+    return (offset == 4) ? Buffer.Allocate(1) : output.Slice(offset, output.Length);
+  }
+
+  public static Buffer FromInt16(short integer)
+  {
+    byte[] bytes = BitConverter.GetBytes(integer);
+    if (BitConverter.IsLittleEndian)
+    {
+      Array.Reverse(bytes);
+    }
+
+    Buffer output = FromByteArray(bytes);
+    int offset = 0;
+    for (; offset < output.Length && (output[offset] == 0); offset++) ;
+
+    return (offset == 2) ? Buffer.Allocate(1) : output.Slice(offset, output.Length);
+  }
+
   public static Buffer Concat(Buffer[] buffers)
   {
     List<BufferSource> sources = new();
@@ -425,5 +455,31 @@ public class Buffer
     }
 
     return Concat(buffers);
+  }
+
+  public int ToInt32()
+  {
+    if (Length > 4)
+    {
+      throw new Exception("Length must be less than or equal to 4.");
+    }
+
+    byte[] bytes = PadStart(4).ToByteArray();
+    if (BitConverter.IsLittleEndian)
+    {
+      Array.Reverse(bytes);
+    }
+
+    return BitConverter.ToInt32(bytes);
+  }
+
+  public short ToInt16()
+  {
+    if (Length > 2)
+    {
+      throw new Exception("Length must be less than or equal to 2.");
+    }
+
+    return (short)ToInt32();
   }
 }

@@ -260,6 +260,7 @@ public class Buffer
     return BitConverter.ToString(ToByteArray()).Replace("-", "");
   }
 
+  public Buffer Slice(int start) => Slice(start, Length);
   public Buffer Slice(int start, int end)
   {
     if (

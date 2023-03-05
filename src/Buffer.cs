@@ -32,7 +32,13 @@ public class Buffer
     return new(new BufferSource[] { new(data, 0, length, false) });
   }
 
-  public static Buffer Allocate(int length) {
+  public static Buffer Allocate(int length)
+  {
+    if (length == 0)
+    {
+      return new(new BufferSource[] { });
+    }
+
     return new(new BufferSource[] { new(new byte[length], 0, length, false) });
   }
 
@@ -68,6 +74,11 @@ public class Buffer
 
     foreach (Buffer buffer in buffers)
     {
+      if (buffer.Length == 0)
+      {
+        continue;
+      }
+
       foreach (BufferSource bufferSource in buffer.Sources)
       {
         sources.Add(bufferSource.Clone());

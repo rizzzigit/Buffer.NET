@@ -4,12 +4,22 @@ namespace RizzziGit;
 
 public class Buffer
 {
-  public static bool operator == (Buffer? left, object? right)
+  public static explicit operator Buffer(byte[] input)
+  {
+    return FromByteArray(input);
+  }
+
+  public static explicit operator byte[](Buffer input)
+  {
+    return input.ToByteArray();
+  }
+
+  public static bool operator ==(Buffer? left, object? right)
   {
     return left?.GetHashCode() == right?.GetHashCode();
   }
 
-  public static bool operator != (Buffer? left, object? right)
+  public static bool operator !=(Buffer? left, object? right)
   {
     return !(left == right);
   }

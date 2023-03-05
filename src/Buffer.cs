@@ -346,28 +346,20 @@ public class Buffer
           continue;
         }
 
-        if (source.Length < (destinationOffset + length))
-        {
-          source.Write(buffer, sourceOffset, destinationOffset, source.Length - destinationOffset);
-          int written = source.Length - destinationOffset;
-
-          length -= written;
-          sourceOffset += written;
-          bytesWritten += written;
-
-          destinationOffset = 0;
-        }
-        else
+        if (source.Length >= (destinationOffset + length))
         {
           source.Write(buffer, sourceOffset, destinationOffset, length);
-
-          sourceOffset += length;
-          bytesWritten += length;
-          length = 0;
-
-          destinationOffset = 0;
           break;
         }
+
+        int written = source.Length - destinationOffset;
+        source.Write(buffer, sourceOffset, destinationOffset, written);
+
+        length -= written;
+        sourceOffset += written;
+        bytesWritten += written;
+
+        destinationOffset = 0;
       }
 
       return bytesWritten;
